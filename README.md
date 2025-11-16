@@ -534,13 +534,6 @@ MiniBlob API
 - Consider implementing rate limiting for public endpoints
 - Review and audit `.auth` files regularly
 
-## Contributing
-
-Contributions are welcome! Please submit pull requests with:
-
-- Clear description of changes
-- Unit tests for new functionality
-- Updated documentation
 
 ## License
 
