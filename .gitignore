@@ -1,0 +1,5 @@
+bin/
+obj/
+.vs/
+Storage/
+mini_blob_ef.db

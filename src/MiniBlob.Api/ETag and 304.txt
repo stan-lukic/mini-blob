@@ -1,0 +1,45 @@
+?? Step 1 — First request (get headers)
+curl -i http://localhost:7700/container1/path/sub/testfile.txt
+
+
+You’ll see something like:
+
+HTTP/1.1 200 OK
+Content-Type: application/octet-stream
+Content-Length: 123456
+Last-Modified: Wed, 05 Nov 2025 08:10:14 GMT
+ETag: "A1B2C3D4"
+
+
+Note the values of ETag and Last-Modified.
+
+?? Step 2 — Simulate cached request (ETag)
+
+Now send another request with If-None-Match using that ETag:
+
+curl -i http://localhost:7700//container1/path/sub/testfile.txt \
+     -H 'If-None-Match: "A1B2C3D4"'
+
+
+If the file is unchanged, the response should be:
+
+HTTP/1.1 304 Not Modified
+
+
+(no Content-Length, no body)
+
+If you modify the file, you’ll get a new ETag and a 200 OK response again.
+
+?? Step 3 — Test with Last-Modified
+
+You can also test using the If-Modified-Since header:
+
+curl -i http://localhost:7700/container1/path/sub/testfile.txt \
+     -H 'If-Modified-Since: Wed, 05 Nov 2025 08:10:14 GMT'
+
+
+Same deal:
+
+If unchanged ? 304 Not Modified
+
+If modified ? 200 OK
