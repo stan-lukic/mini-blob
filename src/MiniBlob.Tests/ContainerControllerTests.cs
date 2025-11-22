@@ -2,6 +2,8 @@
 
 using global::MiniBlob.Api.Helpers;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using MiniBlob.Api.Services;
 using System;
 using System.Collections.Generic;
@@ -33,6 +35,14 @@ public class ContainerControllerTests : IClassFixture<WebApplicationFactory<Prog
     public async Task AdminCanCreateContainer_CreatesContainerAuthFile() {
         // Arrange
         var client = CreateClientWithToken(_factory, "admin", [ "admin" ]);
+
+        // Use the factory to create a service scope
+        await using var scope = _factory.Services.CreateAsyncScope();
+        
+        // Get the IConfiguration service from the scope
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var storageRoot = configuration["MiniBlob:RootPath"] ?? "MiniBlobStorage";
+
         var containerName = "container1";
 
         // Prepare POST body
@@ -49,7 +59,7 @@ public class ContainerControllerTests : IClassFixture<WebApplicationFactory<Prog
         response.EnsureSuccessStatusCode();
 
         // Check that .container.auth exists
-        var containerPath = Path.Combine("Storage", containerName);
+        var containerPath = Path.Combine(storageRoot, containerName);
         var authPath = Path.Combine(containerPath, ".container.auth");
         Assert.True(File.Exists(authPath), ".container.auth should exist after container creation");
 

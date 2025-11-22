@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MiniBlob.Api.Helpers;
 using MiniBlob.Api.Services;
@@ -26,7 +27,7 @@ public class BlobIntegrationTests : IClassFixture<WebApplicationFactory<Program>
     public async Task PutGetHeadMetadataTest()
     {
         var client = _factory.CreateClient();
-
+        
         var key = "abcdefghijklmnopqrstuvwx12345678"; // 32 chars
         var token = TokenHelper.GenerateToken("tester", [ "admin" ], key, "mini-blob", "mini-blob-audience", 60);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -71,7 +72,7 @@ public class BlobIntegrationTests : IClassFixture<WebApplicationFactory<Program>
         };
         await client.SendAsync(putReq);
 
-        // Try to GET as non-admin — expect forbidden
+        // Try to GET as non-admin ï¿½ expect forbidden
         var getResp = await client.GetAsync(url);
         Assert.Equal(HttpStatusCode.Forbidden, getResp.StatusCode);
     }
@@ -103,7 +104,7 @@ public class BlobIntegrationTests : IClassFixture<WebApplicationFactory<Program>
             File.Delete(propFilePath);
 
         //
-        // 1 Try as regular user — expect 403 Forbidden
+        // 1 Try as regular user ï¿½ expect 403 Forbidden
         //
         var userToken = TokenHelper.GenerateToken("user1", ["user"], key, "mini-blob", "mini-blob-audience", 60);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
@@ -112,7 +113,7 @@ public class BlobIntegrationTests : IClassFixture<WebApplicationFactory<Program>
         Assert.Equal(HttpStatusCode.Forbidden, forbiddenResp.StatusCode);
 
         //
-        // 2. Try as admin — expect 200 OK and correct content
+        // 2. Try as admin ï¿½ expect 200 OK and correct content
         //
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", adminToken);
         var okResp = await client.GetAsync(url);
@@ -150,6 +151,7 @@ public class BlobIntegrationTests : IClassFixture<WebApplicationFactory<Program>
         Assert.False(File.Exists(authFilePath),"Using container level security");
 
     }
+
     [Fact]
     public async Task PutCreatesFileAuth_WhenSpecialHeadersPresent() {
         var client = _factory.CreateClient();
@@ -198,4 +200,30 @@ public class BlobIntegrationTests : IClassFixture<WebApplicationFactory<Program>
         Assert.Contains("public", authInfo.RolesAllowed); // because x-ms-meta-public=true
     }
 
+    /// <summary>
+    /// Verifies that application settings can be read from the configuration using dependency injection.
+    /// </summary>
+    [Fact()]
+    public async Task ReadAppSettingsTest()
+    {
+        // Use the factory to create a service scope
+        await using var scope = _factory.Services.CreateAsyncScope();
+        
+        // Get the IConfiguration service from the scope
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+
+        //
+        // Now you can read the values from appsettings.json
+        //
+        
+        // Example: Reading a simple string value
+        var key = configuration["Jwt:Key"];
+        Assert.NotNull(key);
+        Assert.NotEmpty(key);
+        
+        // Example: Reading a complex section or binding to an object
+        var jwtSection = configuration.GetSection("Jwt");
+        Assert.True(jwtSection.Exists());
+    
+    }
 }

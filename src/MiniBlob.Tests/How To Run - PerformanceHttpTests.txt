@@ -1,0 +1,10 @@
+From the solution folder (Linux):
+1. run this to trust dev cert:
+   dotnet dev-certs https -t
+2. Run this test to create container1:
+   dotnet test --filter "FullyQualifiedName~AdminCanCreateContainer_CreatesContainerAuthFile"
+3. Start the mini blob api: 
+   dotnet run --project ./src/MiniBlob.Api/MiniBlob.Api.csproj
+4. Make sure that the Skip patameter is removed from  the Fact attribute. For example: [Fact] 
+   To start the performance test open another terminal, navigate to the solution folder and run:
+   dotnet test --filter "FullyQualifiedName~MiniBlob_Performance_HttpParallel_1000Docs"
